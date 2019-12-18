@@ -1,0 +1,11 @@
+#!/bin/bash
+
+printf "Content: text/html\n\n"
+
+printf "<!DOCTYPE html>"
+printf "<html>"
+printf "\t<head>\n\t\t<title>Variabili d'ambiente</title>\n\t</head>\n\t<body>\n"
+printf "\n\t<br>\n\t<pre>\n\t\t"
+set
+printf "\n\t\t</pre>"
+printf "\n\t</body>\n</html>"
