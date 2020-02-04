@@ -35,12 +35,12 @@
 				$paga="7";
 			}
 			
-			echo "<table border=\"1\">\n";
+			echo "<table border=\"0; border-collapse:collapse;\">\n";
 			echo "\t\t\t<tr style=\"color:#57a8ba;\">\n";
-			echo "\t\t\t\t<th>Nome</th>\n";
-			echo "\t\t\t\t<th>Ore</th>\n";
-			echo "\t\t\t\t<th>Paga</th>\n";
-			echo "\t\t\t\t<th>Paga totale</th>\n";
+			echo "\t\t\t\t<th style=\"color:#0069aa;\">Nome</th>\n";
+			echo "\t\t\t\t<th style=\"color:#0069ab;\">Ore</th>\n";
+			echo "\t\t\t\t<th style=\"color:#aa0069;\">Paga</th>\n";
+			echo "\t\t\t\t<th style=\"color:#69aa00;\">Paga totale</th>\n";
 			echo "\t\t\t</tr>\n";
 
 			echo "\t\t\t<tr>\n";

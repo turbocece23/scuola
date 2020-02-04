@@ -32,7 +32,7 @@ public class threadhttp implements Runnable {
             String addrstr = addr.getHostAddress();
             
             //Stampa una risposta
-            pstream.print("HTTP/1.1 200 OK\nContent: text/html; Connection: close\n\n");
+            pstream.print("HTTP/1.1 200 OK\nContent: text/html; Connection: keep-alive\n\n");
             pstream.print("<html>\n\t<head>\n\t\t<title>Pagina prova</title>\n\t</head>\n\t<body>\n\t\n\t");
             pstream.print("\t<h1>Ciao "+ csocket.getInetAddress() +"!</h1>\n");
             pstream.print("\t</body>\n</html>\n");
