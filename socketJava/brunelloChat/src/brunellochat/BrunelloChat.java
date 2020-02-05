@@ -16,39 +16,55 @@ package brunellochat;
 
 import java.io.*;
 import java.net.*;
+import java.lang.*;
+import java.util.*;
 
 public class BrunelloChat {
 
     private String[] messaggio;
     //Porta del server in ascolto
-    protected static int serverPort = 9090;
+    protected static int serverPort = 2345;
     
     public static void main(String[] args) throws Exception
     {
-        DatagramSocket ssock = new DatagramSocket(serverPort);
-        //Stampa di controllo
-        System.out.println("Listening");
+        DatagramSocket sock = new DatagramSocket(serverPort);
         
-        String hostname = "172.30.4.9";
+        //Questo è l'indirizzo di destinazione però sotto forma di stringa
+        String stringaIndirizzo = "172.30.4.9";
 
-        InetAddress address = InetAddress.getByName(hostname);
-        DatagramSocket socket = new DatagramSocket();
-
-        InputStream istream;
-        istream = ssock.getInputStream();
-        BufferedReader receiveRead = new BufferedReader(new InputStreamReader(istream));
+        //Questa funzione converte la stringa in un indirizzo raggiungibile
+        InetAddress indirizzo = InetAddress.getByName(stringaIndirizzo);
         
-        byte[] buffer = new byte[512];
-        
+        StringBuffer bufferOUT = new StringBuffer();
+        byte[] bufferIN = new byte[512];
+        byte[] bufferOUT2 = new byte[512];
         
         for (int i = 0; i < 256; i++) 
         {
-            buffer[i]=1;
+            bufferOUT2[i]='a';
         }
+        
+        //Invia i dati tramite un buffer
+        DatagramPacket invia = new DatagramPacket(bufferOUT2, bufferOUT2.length, indirizzo, serverPort);
+        sock.send(invia);
+        
+        bufferOUT.insert(0,"Saluto generico");
 
-        DatagramPacket request = new DatagramPacket(buffer, buffer.length, address, serverPort);
-        socket.send(request);
+        byte[] bufferbytes = new byte[bufferOUT.length()];
         
+        //DatagramPacket invia = new DatagramPacket(bufferbytes, bufferOUT.length(), indirizzo, serverPort);
+        sock.send(invia);
         
+        DatagramPacket ricevi = new DatagramPacket(bufferIN, bufferIN.length);
+        String ricevuto;
+        int cont=0;
+        
+        do
+        {
+            sock.receive(ricevi);
+            ricevuto = new String(ricevi.getData());
+
+            System.out.println("DATI RICEVUTI: "+ricevuto+"\n");
+        }while(true);
     }
 }
