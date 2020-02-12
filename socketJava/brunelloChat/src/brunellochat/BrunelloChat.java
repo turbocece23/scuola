@@ -39,9 +39,15 @@ public class BrunelloChat
            if(netint.getName().equals(scheda))
            {
                indirizziSchedeRete = netint.getInetAddresses();
+               int i=0;
+               
                for(InetAddress inetAddress : Collections.list(indirizziSchedeRete))
                {
-                   return inetAddress.toString();
+                   if(i==1)
+                   {
+                      return inetAddress.toString();
+                   }
+                   i++;
                }
            }
         }
@@ -65,7 +71,7 @@ public class BrunelloChat
         System.out.print("Benvenuto nel client di Gusella Michele\nScrivi q per uscire dal programma\n\n");
         Thread tinvio = new Thread(invio);
         Thread tricevo = new Thread(ricevo);
-        Thread tgestisco = new Thread(gestisco); 
+        Thread tgestisco = new Thread(gestisco);
         
         tgestisco.start();
         tinvio.start();

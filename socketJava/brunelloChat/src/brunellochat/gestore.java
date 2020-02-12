@@ -14,7 +14,7 @@ public class gestore implements Runnable
     private final int porta;
     private final InetAddress indirizzo;
     private final long attesa               = 10000;
-    private final String id                 = "<id>Mikele</id>";
+    private final String id                 = "<id>cesare</id>";
     private boolean attivo                  = true;
     private final DatagramSocket socket;
     
