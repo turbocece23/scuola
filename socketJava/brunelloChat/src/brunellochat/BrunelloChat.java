@@ -17,33 +17,59 @@ https://www.baeldung.com/udp-in-java
  */
 package brunellochat;
 
-public class BrunelloChat {
+import java.io.*;
+import java.net.*;
+import java.util.Collections;
+import java.util.Enumeration;
 
+public class BrunelloChat
+{
+    private static final int porta = 2345;
+    private static final String hostname = "172.30.4.255";
+    /* Serve per ignorare i messaggi inviati dal processo stesso che tornano indietro */
+    private static final String scheda = "br0";
     
-    public static void main(String[] args) throws Exception
+    public static String getIP() throws SocketException
     {
-        sender inviatore = new sender(2345,"172.30.4.255");
-        
-        Thread tinviatore = new Thread(inviatore);
-        tinviatore.start();
-        
-        /*
-        byte[] bufferbytes = new byte[bufferOUT.length()];
-        
-        //DatagramPacket invia = new DatagramPacket(bufferbytes, bufferOUT.length(), indirizzo, serverPort);
-        sock.send(invia);
-        
-        DatagramPacket ricevi = new DatagramPacket(bufferIN, bufferIN.length);
-        String ricevuto;
-        int cont=0;
-        
-        do
+        Enumeration<NetworkInterface> schede = NetworkInterface.getNetworkInterfaces();  
+        Enumeration<InetAddress> indirizziSchedeRete;
+            
+        for(NetworkInterface netint: Collections.list(schede))
         {
-            sock.receive(ricevi);
-            ricevuto = new String(ricevi.getData());
-
-            System.out.println("DATI RICEVUTI: "+ricevuto+"\n");
-        }while(true);
-        */
+           if(netint.getName().equals(scheda))
+           {
+               indirizziSchedeRete = netint.getInetAddresses();
+               for(InetAddress inetAddress : Collections.list(indirizziSchedeRete))
+               {
+                   return inetAddress.toString();
+               }
+           }
+        }
+        return null;
     }
+    
+    public static void main(String[] args) throws SocketException, UnknownHostException, IOException
+    {
+        DatagramSocket socket =new DatagramSocket(porta);
+        InetAddress indirizzo = InetAddress.getByName(hostname);
+        
+        /* Controllo l'ip della scheda di rete così evito di ricevere i pacchetti che hanno come source questo ip */
+        String ip = getIP();
+        System.out.println("L'IP con cui ti presenti in rete e': " + ip.substring(1));
+        /* substring serve per togliere il primo carattere che è uno / */
+        
+        sender invio = new sender(indirizzo, porta, socket);
+        receiver ricevo = new receiver(socket, ip);
+        gestore gestisco = new gestore(indirizzo, porta, socket);
+        
+        System.out.print("Benvenuto nel client di Gusella Michele\nScrivi q per uscire dal programma\n\n");
+        Thread tinvio = new Thread(invio);
+        Thread tricevo = new Thread(ricevo);
+        Thread tgestisco = new Thread(gestisco);
+        
+        tgestisco.start();
+        tinvio.start();
+        tricevo.start();
+    }
+    
 }

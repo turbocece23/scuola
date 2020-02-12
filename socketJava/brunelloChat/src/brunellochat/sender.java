@@ -5,63 +5,67 @@
  */
 package brunellochat;
 
-
 import java.net.*;
 import java.util.Scanner;
 
-
 public class sender implements Runnable
 {
+    private final int porta;
+    private final InetAddress indirizzo;
+    private final DatagramSocket client;
     
-    //Porta del server in ascolto
-    protected int serverPort;
-    //Questo è l'indirizzo di destinazione però sotto forma di stringa
-    protected InetAddress indirizzo;
-    protected byte[] msginvio;
-    protected Scanner input = new Scanner(System.in);
-    
-    public sender(int port, String addr) throws Exception
+    //Metodo costruttore che si occuperà di inviare i miei dati
+    public sender(InetAddress host, int porta, DatagramSocket socket)
     {
-        this.serverPort = port;
-        //Questa funzione converte la stringa in un indirizzo raggiungibile
-        this.indirizzo = InetAddress.getByName(addr);
+        this.indirizzo = host;
+        this.porta = porta;
+        this.client = socket;
     }
     
     @Override
     public void run()
     {
-        DatagramSocket sock = null;
-        try
-        {
-            sock = new DatagramSocket(serverPort,indirizzo);
-        }catch(SocketException e)
-        {
-            System.out.println("Errore nella creazione del socket: "+e);
-        }
-        
-        String messaggio = new String();
-        messaggio = input.nextLine();
+        //Messaggio inizializzato a stringa vuota
+        String msg = "";
         
         try
         {
-            msginvio = messaggio.getBytes("UTF-8");
-        }catch (Exception e)
-        {
-            System.out.println("Errore nella creazione del buffer: "+e);
+            //Nuovo scanner
+            Scanner scan =new Scanner(System.in);
+            // Inizializzo il buffer per inizializzare il pacchetto udp
+            byte[] buffer = msg.getBytes();
+            DatagramPacket inviomessaggio = new DatagramPacket(buffer, 0, indirizzo, porta);
+            
+            //Ciclo infinito
+            do
+            {
+                //Leggi una stringa in input
+                msg = scan.nextLine();
+                
+                //Se la stringa è diversa da q (comando per uscire)
+                if(!msg.equals("q"))
+                {
+                    //Associa alla stringa msg quello che ho appena scritto
+                    msg = "<msg>".concat(msg.concat("</msg>"));   
+                    buffer = msg.getBytes("UTF-8");
+
+                    //Imposta i dati da inviare del DatagramPacket e la lunghezza
+                    inviomessaggio.setData(buffer);
+                    inviomessaggio.setLength(buffer.length);
+
+                    //Usando il DatagramSocket "client" invia i dati
+                    client.send(inviomessaggio);
+                }
+            }
+            while(!msg.equals("q"));
+            
+            //Chiudi il client, una votalche l'utente scrive "q"
+            client.close();
+            System.out.println("Connessione terminata con successo");
         }
-        
-        //Invia i dati tramite un buffer, creazione del buffer
-        DatagramPacket invia = new DatagramPacket(msginvio, msginvio.length, indirizzo, serverPort);
-        
-        try
+        catch (Exception e)
         {
-            //Invia i dati
-            sock.send(invia);
-        }catch(Exception e)
-        {
-            System.out.println("AAAARRRRHHH C'è un errore! "+e);
+            System.out.println("Inviatore: " + e);
         }
-        
-        sock.close();
     }
 }
