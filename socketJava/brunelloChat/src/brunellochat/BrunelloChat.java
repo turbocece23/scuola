@@ -65,7 +65,7 @@ public class BrunelloChat
         System.out.print("Benvenuto nel client di Gusella Michele\nScrivi q per uscire dal programma\n\n");
         Thread tinvio = new Thread(invio);
         Thread tricevo = new Thread(ricevo);
-        Thread tgestisco = new Thread(gestisco);
+        Thread tgestisco = new Thread(gestisco); 
         
         tgestisco.start();
         tinvio.start();

@@ -7,7 +7,11 @@
 <html>
 
 <head>
+<<<<<<< HEAD
 	<title>Ore di lavoro</title>
+=======
+	<title>Cambia lo sfondo</title>
+>>>>>>> 90b2b51e09ab70e84bc2e3d22fc7e0bc5bbf7477
 </head>
 
 
