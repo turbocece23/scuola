@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package brunellochat;
 
 import java.net.*;
@@ -14,8 +9,7 @@ public class sender implements Runnable
     private final InetAddress indirizzo;
     private final DatagramSocket client;
     
-    //Metodo costruttore che si occuperà di inviare i miei dati
-    public sender(InetAddress host, int porta, DatagramSocket socket)
+    public Inviatore(InetAddress host, int porta, DatagramSocket socket)
     {
         this.indirizzo = host;
         this.porta = porta;
@@ -25,41 +19,37 @@ public class sender implements Runnable
     @Override
     public void run()
     {
-        //Messaggio inizializzato a stringa vuota
         String msg = "";
         
         try
         {
-            //Nuovo scanner
             Scanner scan =new Scanner(System.in);
-            // Inizializzo il buffer per inizializzare il pacchetto udp
+            /* Inizializzo il buffer per inizializzare il pacchetto udp */
             byte[] buffer = msg.getBytes();
-            DatagramPacket inviomessaggio = new DatagramPacket(buffer, 0, indirizzo, porta);
+            DatagramPacket inviomessaggio =new DatagramPacket(buffer, 0, indirizzo, porta);
             
-            //Ciclo infinito
             do
             {
-                //Leggi una stringa in input
                 msg = scan.nextLine();
                 
-                //Se la stringa è diversa da q (comando per uscire)
+                /* Se il messaggio non è "q", cioè non voglio uscire dal processo */
                 if(!msg.equals("q"))
                 {
-                    //Associa alla stringa msg quello che ho appena scritto
+                    /* Aggiungo il tag msg all'inizio e alla fine del messaggio e creo il buffer da spedire */
                     msg = "<msg>".concat(msg.concat("</msg>"));   
                     buffer = msg.getBytes("UTF-8");
-
-                    //Imposta i dati da inviare del DatagramPacket e la lunghezza
+                    
+                    /* Imposto il pacchetto udp con il buffer contenente il messaggio */
                     inviomessaggio.setData(buffer);
                     inviomessaggio.setLength(buffer.length);
-
-                    //Usando il DatagramSocket "client" invia i dati
+                    /* Invio il pacchetto */
                     client.send(inviomessaggio);
                 }
             }
             while(!msg.equals("q"));
             
-            //Chiudi il client, una votalche l'utente scrive "q"
+            /* Quando esco chiudo il socket così gli altri thread catturano l'eccezione del socket chiuso
+               e terminano la loro esecuzione */
             client.close();
             System.out.println("Connessione terminata con successo");
         }

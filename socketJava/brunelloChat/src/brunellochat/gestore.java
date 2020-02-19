@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package brunellochat;
 
 import java.net.DatagramPacket;
@@ -14,16 +9,16 @@ public class gestore implements Runnable
     private final int porta;
     private final InetAddress indirizzo;
     private final long attesa               = 10000;
-    private final String id                 = "<id>cesare</id>";
-    private boolean attivo                  = true;
+    private final String id;
     private final DatagramSocket socket;
     
-    // Metodo costruttore
-    public gestore(InetAddress host, int porta, DatagramSocket socket)
+    //Metodo costruttore
+    public Gestore(InetAddress host, int porta, DatagramSocket socket, String id)
     {
         this.indirizzo = host;
         this.porta = porta;
         this.socket = socket;
+        this.id = "<id>".concat(id.concat("</id>"));
     }
     
     @Override
@@ -31,18 +26,22 @@ public class gestore implements Runnable
     {
         try
         {
+            //Creo il buffer che avrà sempre lo stesso messaggio da inviare, ovvero l'id
             byte[] buffer = id.getBytes("UTF-8");
             DatagramPacket invioid =new DatagramPacket(buffer, buffer.length, indirizzo, porta);
             
-            while(attivo)
+            //Ogni attesa secondi invia l'id
+            while(true)
             {
                 socket.send(invioid);
                 Thread.sleep(attesa);
             }   
-        } catch(Exception e)
+        }
+        //Quando l'inviatore chiude il socket, appena il gestore prova a inviare l'id vede che il socket è chiuso 
+        //così viene catturata l'eccezione e il thread termina l'esecuzione essendo uscito dal ciclo while
+        catch(Exception e)
         {
             System.out.println("Gestore: " + e);
-            attivo = false;
         }
     }
 }
