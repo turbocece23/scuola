@@ -73,7 +73,7 @@ public class BrunelloChat
         /* Creo i vari oggetti e i rispettivi thread che gestiscono il tutto */
         sender invio = new sender(indirizzo, porta, socket);
         receiver ricevo = new receiver(socket, ip, id);
-        gestore gestisco = new gestore(indirizzo, porta, socket);
+        gestore gestisco = new gestore(indirizzo, porta, socket, id);
         
         System.out.print("Benvenuto nel client di Gusella Michele\nScrivi q per uscire dal programma\n\n");
         Thread tinvio = new Thread(invio);

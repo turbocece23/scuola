@@ -9,7 +9,7 @@ public class sender implements Runnable
     private final InetAddress indirizzo;
     private final DatagramSocket client;
     
-    public Inviatore(InetAddress host, int porta, DatagramSocket socket)
+    public sender(InetAddress host, int porta, DatagramSocket socket)
     {
         this.indirizzo = host;
         this.porta = porta;

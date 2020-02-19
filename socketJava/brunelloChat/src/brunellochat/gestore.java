@@ -13,7 +13,7 @@ public class gestore implements Runnable
     private final DatagramSocket socket;
     
     //Metodo costruttore
-    public Gestore(InetAddress host, int porta, DatagramSocket socket, String id)
+    public gestore(InetAddress host, int porta, DatagramSocket socket, String id)
     {
         this.indirizzo = host;
         this.porta = porta;

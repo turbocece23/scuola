@@ -1,15 +1,198 @@
-package brunellochat;
-
+import java.io.*;
 import java.net.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Scanner;
 
-public class receiver implements Runnable
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+public class chatUdp
+{
+    private static final int porta          = 2345;
+    private static final String hostname    = "172.30.4.255";
+    private static final String id          = "Besare";
+    /* Serve per ignorare i messaggi inviati dal processo stesso che tornano indietro */
+    private static final String scheda      = "br0";
+    
+    /* Funzione che a partire dalla lista di schede di rete dell'host, cattura l'ip scelto tramite la posizione */
+    public static String getIP(int posizione) throws SocketException
+    {
+        /* schede è la "lista" di tutte le schede di rete di questo host */
+        Enumeration<NetworkInterface> schede = NetworkInterface.getNetworkInterfaces();  
+        /* indirizziSchedeRete è la "lista" di tutti gli ip (sia ipv4 sia ipv6) di una scheda di rete */
+        Enumeration<InetAddress> indirizziSchedeRete;
+        /* Per ogni scheda di rete */
+        for(NetworkInterface netint: Collections.list(schede))
+        {
+            /* Se il nome della scheda della lista equivale alla variabile scheda (variabile della classe) */
+           if(netint.getName().equals(scheda))
+           {
+               /* indirizziSchedeRete prende tutti gli ip della scheda di rete */
+               indirizziSchedeRete = netint.getInetAddresses();
+               /* Per ogni ip della scheda di rete */
+               int i = 0;
+               for(InetAddress inetAddress : Collections.list(indirizziSchedeRete))
+               {
+                   if(i == posizione)
+                       return inetAddress.toString();
+                   i++;
+               }
+           }
+        }
+        /* Non dovrebbe mai arrivare a questo punto */
+        return null;
+    }
+    
+    public static void main(String[] args) throws SocketException, UnknownHostException, IOException
+    {
+        /* Creo il socket e prendo l'ip partendo da un hostname */
+        DatagramSocket socket =new DatagramSocket(porta);
+        InetAddress indirizzo = InetAddress.getByName(hostname);
+        
+        /* Prendo l'ip con cui la scheda di rete si identifica in rete (Serve al thread ricevitore) */
+        String ip = getIP(2);
+        
+        /* Creo i vari oggetti e i rispettivi thread che gestiscono il tutto */
+        Inviatore invio =new Inviatore(indirizzo, porta, socket);
+        Ricevitore ricevo =new Ricevitore(socket, ip, id);
+        Gestore gestisco =new Gestore(indirizzo, porta, socket, id);
+        
+        System.out.println("Benvenuto nel client di Gusella Michele");
+        //System.out.println("L'IP con cui ti presenti in rete e': " + ip.substring(1));
+        System.out.println("Sintassi per inviare un messaggio privato -> :iddestinatario messaggio");
+        System.out.println("Scrivi q per uscire dal programma");
+        System.out.println("---------------- Inizio Chat ----------------");
+        Thread tinvio =new Thread(invio);
+        Thread tricevo =new Thread(ricevo);
+        Thread tgestisco =new Thread(gestisco);
+        
+        tgestisco.start();
+        tinvio.start();
+        tricevo.start();
+        
+        //String timeStamp = new SimpleDateFormat("dd MM yyyy HH mm ss").format(new Date());
+        //System.out.println("Data: " + timeStamp);
+    }
+}
+
+class Gestore implements Runnable
+{
+    private final int porta;
+    private final InetAddress indirizzo;
+    /* Millisecondi dopo cui invia l'id per identificarsi */
+    private final long attesa               = 10000;
+    private final String id;
+    private final DatagramSocket socket;
+    
+    public Gestore(InetAddress host, int porta, DatagramSocket socket, String id)
+    {
+        this.indirizzo = host;
+        this.porta = porta;
+        this.socket = socket;
+        this.id = "<id>".concat(id.concat("</id>"));
+    }
+    
+    @Override
+    public void run()
+    {
+        try
+        {
+            /* Creo il buffer che avrà sempre lo stesso messaggio da inviare, ovvero l'id */
+            byte[] buffer = id.getBytes("UTF-8");
+            DatagramPacket invioid =new DatagramPacket(buffer, buffer.length, indirizzo, porta);
+            
+            /* Ogni attesa secondi invia l'id */
+            while(true)
+            {
+                socket.send(invioid);
+                Thread.sleep(attesa);
+            }
+        }
+        /* Quando l'inviatore chiude il socket, appena il gestore prova a inviare l'id vede che il socket è chiuso
+           così viene catturata l'eccezione e il thread termina l'esecuzione essendo uscito dal ciclo while */
+        catch(Exception e)
+        {
+            System.out.println("Gestore: " + e);
+        }
+    }
+}
+
+class Inviatore implements Runnable
+{
+    private final int porta;
+    private final InetAddress indirizzo;
+    private final DatagramSocket client;
+    
+    public Inviatore(InetAddress host, int porta, DatagramSocket socket)
+    {
+        this.indirizzo = host;
+        this.porta = porta;
+        this.client = socket;
+    }
+    
+    @Override
+    public void run()
+    {
+        String msg = "";
+        
+        try
+        {
+            Scanner scan =new Scanner(System.in);
+            /* Inizializzo il buffer per inizializzare il pacchetto udp */
+            byte[] buffer = msg.getBytes();
+            DatagramPacket inviomessaggio =new DatagramPacket(buffer, 0, indirizzo, porta);
+            
+            do
+            {
+                msg = scan.nextLine();
+                
+                /* Se il messaggio non è "q", cioè non voglio uscire dal processo */
+                if(!msg.equals("q") && !msg.equals(""))
+                {
+                    /* Controllo se il messaggio e' privato o pubblico e lo invio */
+                    if(msg.charAt(0) == ':')
+                    {
+                        /* Se il messaggio è privato prendo l'id e il messaggio e li concateno con il tag <msg> */
+                        String id = msg.substring(1, msg.indexOf(' '));
+                        msg = msg.substring(msg.indexOf(' ') + 1);
+                        msg = "<msg id=\"".concat(id.concat("\">".concat(msg.concat("</msg>"))));
+                    }
+                    else
+                    {
+                        /* Sennò concateno direttamente il messaggio con il tag */
+                        msg = "<msg>".concat(msg.concat("</msg>"));
+                    }
+                    /* Imposto il pacchetto udp con il buffer contenente il messaggio */
+                    buffer = msg.getBytes("UTF-8");
+                    inviomessaggio.setData(buffer);
+                    inviomessaggio.setLength(buffer.length);
+                    /* Invio il pacchetto */
+                    client.send(inviomessaggio);
+                }
+            }
+            while(!msg.equals("q"));
+
+            /* Quando esco chiudo il socket così gli altri thread catturano l'eccezione del socket chiuso
+               e terminano la loro esecuzione */
+            client.close();
+            System.out.println("Connessione terminata con successo");
+        }
+        catch (Exception e)
+        {
+            System.out.println("Inviatore: " + e);
+        }
+    }
+}
+
+class Ricevitore implements Runnable
 {
     /* Dimensione del buffer e dell'array che contiene gli id e ip */
-    private final int dim = 64;
+    private final int dim                       = 256;
     /* L'ip dell'interfaccia di rete scelta nella classe principale, non il localhost */
     private final String iplocale;
     /* Di default false, se true stampa anche i messaggi senza tag o con tag non riconosciuti (utile per controllare cosa riceve il thread) */
-    private final boolean noTag = false;
+    private final boolean noTag                 = false;
     /* Ciò che riceve */
     private String msg;
     /* L'id che comunica ogni tot tempo */
@@ -21,7 +204,7 @@ public class receiver implements Runnable
     private String[] id =new String[dim];
     private final DatagramSocket server;
     
-    public receiver(DatagramSocket socket, String ip, String id)
+    public Ricevitore(DatagramSocket socket, String ip, String id)
     {
         this.server = socket;
         this.iplocale = ip;
@@ -202,3 +385,5 @@ public class receiver implements Runnable
         }
     }
 }
+
+
